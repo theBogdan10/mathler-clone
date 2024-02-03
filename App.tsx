@@ -40,9 +40,15 @@ export const DEFAULT_ROWS_STATE = {
   6: null,
 }
 
+function countMatches(inputString, pattern) {
+  const regex = new RegExp(pattern, 'g');
+  const matches = inputString.match(regex);
+
+  return matches ? matches.length : 0;
+}
+
 
 function RowInput({ value, color }) {
-  console.log('value',value);
   return (
     <View style={{width: 50, height: 50, borderColor: 'gray', borderWidth: 2, alignItems: 'center', justifyContent: 'center', backgroundColor: color}}>
       <Text>{value}</Text>
@@ -50,18 +56,18 @@ function RowInput({ value, color }) {
   );
 }
 
-function App(): React.JSX.Element {
-  const [matchesState, setMatchesState] = useState({
-    nonExists: [],
-    exists: [],
-    existsInTheSamePosition: [],
-  })
+const initialRows = Array.from({ length: 6 }, () => Array(6).fill(null));
+const initialColors = Array.from({ length: 6 }, () => Array(6).fill('white'));
 
+
+function App(): React.JSX.Element {
   const [currentRowIndex, setCurrentRowIndex] = useState(0)
   const [currentColumnIndex, setCurrentColumnIndex] = useState(0)
 
+  const [rows, setRows] = useState(initialRows);
+  const [colors, setColors] = useState(initialColors);
+
   const equation = mockedEquantations['1'];
-  console.log('equation',equation);
 
   const onSubmitRow = () => {
     const arr = rows[currentRowIndex]
@@ -72,7 +78,6 @@ function App(): React.JSX.Element {
     }
 
     const userGuess = arr.join('');
-    console.log('userGuess',userGuess);
 
     const validValue = evaluate(equation);
     const isValid = validValue === evaluate(userGuess)
@@ -81,16 +86,32 @@ function App(): React.JSX.Element {
       return Alert.alert("Error", `Every guess must equal ${validValue}`)
     }
 
-    arr.forEach(el => {
-      console.log('el', el);
+    const newColors = [...colors];
 
-      switch (true){
-        case !equation.includes(el as string): return setMatchesState(prevState => ({...prevState, nonExists: [...prevState.nonExists, el]}))
-        case equation.includes(el as string) && equation.indexOf(el) === userGuess.indexOf(el): return setMatchesState(prevState => ({...prevState, existsInTheSamePosition: [...prevState.existsInTheSamePosition, el]}))
-        case equation.includes(el as string): return setMatchesState(prevState => ({...prevState, exists: [...prevState.exists, el]}))
+
+
+    arr.forEach((el, index) => {
+      const hiddenChar = equation[index];
+
+      if (el === hiddenChar) {
+        newColors[currentRowIndex][index] =  'green';
+      } else if (equation.includes(el)) {
+        newColors[currentRowIndex][index] = 'orange';
+      } else {
+        newColors[currentRowIndex][index] = 'grey';
       }
-
     });
+
+    setColors(newColors)
+
+    if (newColors[currentRowIndex].every(el => el === 'green')){
+      Alert.alert('Success', 'You win!');
+      setCurrentRowIndex(0);
+      setCurrentColumnIndex(0);
+      setRows(initialRows)
+      setColors(initialColors);
+      return;
+    }
 
     if (currentRowIndex < 5){
       setCurrentRowIndex(prevState => prevState + 1);
@@ -104,7 +125,6 @@ function App(): React.JSX.Element {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
-  console.log('55555', evaluate(mockedEquantations['1']));
 
   const onPressValue = (value) => {
     const newRows = [...rows];
@@ -139,22 +159,6 @@ function App(): React.JSX.Element {
 
   }
 
-  //const rows = [{id: 1, Component: RowComponent}, {id: 2, Component: RowComponent}, {id: 3, Component: RowComponent}, {id: 4, Component: RowComponent}, {id: 5, Component: RowComponent}, {id: 6, Component: RowComponent}]
-
-  const initialRows = Array.from({ length: 6 }, () => Array(6).fill(null));
-  const [rows, setRows] = useState(initialRows);
-
-  console.log('rows',rows);
-
-  const onBoxBgColor = (value): string => {
-    switch (true){
-      case matchesState?.nonExists?.includes(value): return 'gray';
-      case matchesState?.exists?.includes(value): return 'orange';
-      case matchesState?.existsInTheSamePosition?.includes(value): return 'green';
-      default: return 'white'
-    }
-  }
-
   return (
     <SafeAreaView style={backgroundStyle}>
       <View
@@ -163,21 +167,14 @@ function App(): React.JSX.Element {
           gap: 20,
         width: '100%',
       }}>
-        {/*{*/}
-        {/*  rows.map(({id,Component} )=> (*/}
-        {/*    <Component key={id} rowState={rowState} matchesState={matchesState} />*/}
-        {/*  ))*/}
-        {/*}*/}
         {rows.map((row, rowIndex) => {
-          console.log('row',row);
-
           return (
-            <View key={rowIndex} style={{flexDirection: 'row'}}>
+            <View key={rowIndex} style={{flexDirection: 'row', justifyContent: 'space-around'}}>
               {row.map((col, columnIndex) => (
                 <RowInput
                   key={columnIndex}
                   value={col}
-                  color={onBoxBgColor(col)}
+                  color={colors[rowIndex][columnIndex]}
                 />
               ))}
             </View>
@@ -186,16 +183,16 @@ function App(): React.JSX.Element {
       </View>
 
       <View style={{flexDirection: 'row',justifyContent: 'center', marginTop: 100}}>
-        <Button title={'0'} onPress={() => onPressValue(0)} />
-        <Button title={'1'} onPress={() => onPressValue(1)}/>
-        <Button title={'2'} onPress={() => onPressValue(2)}/>
-        <Button title={'3'} onPress={() => onPressValue(3)}/>
-        <Button title={'4'} onPress={() => onPressValue(4)}/>
-        <Button title={'5'} onPress={() => onPressValue(5)} />
-        <Button title={'6'} onPress={() => onPressValue(6)}/>
-        <Button title={'7'} onPress={() => onPressValue(7)}/>
-        <Button title={'8'} onPress={() => onPressValue(8)}/>
-        <Button title={'9'} onPress={() => onPressValue(9)}/>
+        <Button title={'0'} onPress={() => onPressValue('0')} />
+        <Button title={'1'} onPress={() => onPressValue('1')}/>
+        <Button title={'2'} onPress={() => onPressValue('2')}/>
+        <Button title={'3'} onPress={() => onPressValue('3')}/>
+        <Button title={'4'} onPress={() => onPressValue('4')}/>
+        <Button title={'5'} onPress={() => onPressValue('5')} />
+        <Button title={'6'} onPress={() => onPressValue('6')}/>
+        <Button title={'7'} onPress={() => onPressValue('7')}/>
+        <Button title={'8'} onPress={() => onPressValue('8')}/>
+        <Button title={'9'} onPress={() => onPressValue('9')}/>
       </View>
       <View style={{flexDirection: 'row',justifyContent: 'center'}}>
         <Button title={'Enter'} onPress={() => onPressAction('Enter')} />
