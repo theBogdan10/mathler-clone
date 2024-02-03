@@ -5,17 +5,21 @@
  * @format
  */
 
-import React from 'react';
+import React, { useState } from "react";
 import type {PropsWithChildren} from 'react';
+import { evaluate } from "mathjs";
 import {
+  Alert,
+  Button,
   SafeAreaView,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   useColorScheme,
-  View,
-} from 'react-native';
+  View
+} from "react-native";
+import mockedEquantations from './src/mock/equantations.json'
 
 import {
   Colors,
@@ -24,74 +28,140 @@ import {
   LearnMoreLinks,
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
+import RowComponent from "./Row";
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
+export const DEFAULT_ROWS_STATE = {
+  1: null,
+  2: null,
+  3: null,
+  4: null,
+  5: null,
+  6: null,
 }
 
 function App(): React.JSX.Element {
+  const [currentPosition, setCurrentPosition] = useState(1);
+  const [matchesState, setMatchesState] = useState({
+    nonExists: [],
+    exists: [],
+    existsInTheSamePosition: [],
+  })
+  const [currentRow, setCurrentRow] = useState(1)
+  const [rowState, setRowState] = useState({
+   ...DEFAULT_ROWS_STATE
+  });
+
+  const equation = mockedEquantations['1'];
+  console.log('equation',equation);
+
+  const onSubmitRow = () => {
+    const arr = Object.values(rowState ?? {});
+    const enteredAmount = arr.filter(el => el !== null).length
+
+    if (enteredAmount < 6){
+      return Alert.alert("Error", 'Not enough numbers')
+    }
+
+    const userGuess = arr.join('');
+    console.log('userGuess',userGuess);
+
+    const validValue = evaluate(equation);
+    const isValid = validValue === evaluate(userGuess)
+
+    if (!isValid){
+      return Alert.alert("Error", `Every guess must equal ${validValue}`)
+    }
+
+    arr.forEach(el => {
+      console.log('el', el);
+
+      switch (true){
+        case !equation.includes(el as string): return setMatchesState(prevState => ({...prevState, nonExists: [...prevState.nonExists, el]}))
+        case equation.includes(el as string) && equation.indexOf(el) === userGuess.indexOf(el): return setMatchesState(prevState => ({...prevState, existsInTheSamePosition: [...prevState.existsInTheSamePosition, el]}))
+        case equation.includes(el as string): return setMatchesState(prevState => ({...prevState, exists: [...prevState.exists, el]}))
+      }
+
+    })
+  }
+
   const isDarkMode = useColorScheme() === 'dark';
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
+  console.log('55555', evaluate(mockedEquantations['1']));
+
+  const onPressValue = (value) => {
+    if (!rowState[currentPosition]){
+      setRowState(prevState => ({...prevState, [currentPosition]: value}));
+
+      if (currentPosition < 6){
+        setCurrentPosition(prevState => prevState + 1);
+
+      }
+    }
+  }
+
+  const onPressAction = (type) => {
+    if (type === 'Delete'){
+      if (currentPosition > 1){
+        if (!rowState[currentPosition]){
+          setRowState(prevState => ({...prevState, [currentPosition - 1]: null}));
+          setCurrentPosition(prevState => prevState - 1);
+        }else {
+          setRowState(prevState => ({...prevState, [currentPosition]: null}));
+        }
+      }else {
+        setRowState(prevState => ({...prevState, [currentPosition]: null}));
+      }
+    }else {
+      onSubmitRow()
+    }
+  }
+
+
+  console.log('rowState',rowState);
+  console.log('currentPosition',currentPosition);
+
+  const rows = [{id: 1, Component: RowComponent}, {id: 2, Component: RowComponent}, {id: 3, Component: RowComponent}, {id: 4, Component: RowComponent}, {id: 5, Component: RowComponent}, {id: 6, Component: RowComponent}]
+
   return (
     <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
+      <View
+        style={{
+          marginHorizontal: 'auto',
+          gap: 20,
+        width: '100%',
+      }}>
+        {
+          rows.map(({id,Component} )=> (
+            <Component key={id} rowState={rowState} matchesState={matchesState} />
+          ))
+        }
+      </View>
+
+      <View style={{flexDirection: 'row',justifyContent: 'center', marginTop: 100}}>
+        <Button title={'0'} onPress={() => onPressValue(0)} />
+        <Button title={'1'} onPress={() => onPressValue(1)}/>
+        <Button title={'2'} onPress={() => onPressValue(2)}/>
+        <Button title={'3'} onPress={() => onPressValue(3)}/>
+        <Button title={'4'} onPress={() => onPressValue(4)}/>
+        <Button title={'5'} onPress={() => onPressValue(5)} />
+        <Button title={'6'} onPress={() => onPressValue(6)}/>
+        <Button title={'7'} onPress={() => onPressValue(7)}/>
+        <Button title={'8'} onPress={() => onPressValue(8)}/>
+        <Button title={'9'} onPress={() => onPressValue(9)}/>
+      </View>
+      <View style={{flexDirection: 'row',justifyContent: 'center'}}>
+        <Button title={'Enter'} onPress={() => onPressAction('Enter')} />
+        <Button title={'+'} onPress={() => onPressValue('+')}/>
+        <Button title={'-'} onPress={() => onPressValue('-')}/>
+        <Button title={'*'} onPress={() => onPressValue('*')}/>
+        <Button title={'/'} onPress={() => onPressValue('/')}/>
+        <Button title={'Delete'} onPress={() => onPressAction('Delete')} />
+      </View>
     </SafeAreaView>
   );
 }
