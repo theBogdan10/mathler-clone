@@ -40,23 +40,31 @@ export const DEFAULT_ROWS_STATE = {
   6: null,
 }
 
+
+function RowInput({ value, color }) {
+  console.log('value',value);
+  return (
+    <View style={{width: 50, height: 50, borderColor: 'gray', borderWidth: 2, alignItems: 'center', justifyContent: 'center', backgroundColor: color}}>
+      <Text>{value}</Text>
+    </View>
+  );
+}
+
 function App(): React.JSX.Element {
-  const [currentPosition, setCurrentPosition] = useState(1);
   const [matchesState, setMatchesState] = useState({
     nonExists: [],
     exists: [],
     existsInTheSamePosition: [],
   })
-  const [currentRow, setCurrentRow] = useState(1)
-  const [rowState, setRowState] = useState({
-   ...DEFAULT_ROWS_STATE
-  });
+
+  const [currentRowIndex, setCurrentRowIndex] = useState(0)
+  const [currentColumnIndex, setCurrentColumnIndex] = useState(0)
 
   const equation = mockedEquantations['1'];
   console.log('equation',equation);
 
   const onSubmitRow = () => {
-    const arr = Object.values(rowState ?? {});
+    const arr = rows[currentRowIndex]
     const enteredAmount = arr.filter(el => el !== null).length
 
     if (enteredAmount < 6){
@@ -82,7 +90,12 @@ function App(): React.JSX.Element {
         case equation.includes(el as string): return setMatchesState(prevState => ({...prevState, exists: [...prevState.exists, el]}))
       }
 
-    })
+    });
+
+    if (currentRowIndex < 5){
+      setCurrentRowIndex(prevState => prevState + 1);
+      setCurrentColumnIndex(0);
+    }
   }
 
   const isDarkMode = useColorScheme() === 'dark';
@@ -94,38 +107,53 @@ function App(): React.JSX.Element {
   console.log('55555', evaluate(mockedEquantations['1']));
 
   const onPressValue = (value) => {
-    if (!rowState[currentPosition]){
-      setRowState(prevState => ({...prevState, [currentPosition]: value}));
+    const newRows = [...rows];
 
-      if (currentPosition < 6){
-        setCurrentPosition(prevState => prevState + 1);
+    if (!newRows[currentRowIndex][currentColumnIndex]){
+      newRows[currentRowIndex][currentColumnIndex] = value;
 
+      setRows(newRows);
+
+      if (currentColumnIndex < 5){
+        setCurrentColumnIndex(prevState => prevState + 1);
       }
     }
+
   }
 
   const onPressAction = (type) => {
-    if (type === 'Delete'){
-      if (currentPosition > 1){
-        if (!rowState[currentPosition]){
-          setRowState(prevState => ({...prevState, [currentPosition - 1]: null}));
-          setCurrentPosition(prevState => prevState - 1);
-        }else {
-          setRowState(prevState => ({...prevState, [currentPosition]: null}));
-        }
-      }else {
-        setRowState(prevState => ({...prevState, [currentPosition]: null}));
+    const newRows = [...rows];
+
+    if (type === 'Delete') {
+      const shouldMoveToPreviousColumn = currentColumnIndex > 0 && !newRows[currentRowIndex][currentColumnIndex];
+
+      if (shouldMoveToPreviousColumn) {
+        setCurrentColumnIndex(prevState => prevState - 1);
       }
-    }else {
-      onSubmitRow()
+
+      newRows[currentRowIndex][currentColumnIndex - (shouldMoveToPreviousColumn ? 1 : 0)] = null;
+      setRows(newRows);
+    } else {
+      onSubmitRow();
     }
+
   }
 
+  //const rows = [{id: 1, Component: RowComponent}, {id: 2, Component: RowComponent}, {id: 3, Component: RowComponent}, {id: 4, Component: RowComponent}, {id: 5, Component: RowComponent}, {id: 6, Component: RowComponent}]
 
-  console.log('rowState',rowState);
-  console.log('currentPosition',currentPosition);
+  const initialRows = Array.from({ length: 6 }, () => Array(6).fill(null));
+  const [rows, setRows] = useState(initialRows);
 
-  const rows = [{id: 1, Component: RowComponent}, {id: 2, Component: RowComponent}, {id: 3, Component: RowComponent}, {id: 4, Component: RowComponent}, {id: 5, Component: RowComponent}, {id: 6, Component: RowComponent}]
+  console.log('rows',rows);
+
+  const onBoxBgColor = (value): string => {
+    switch (true){
+      case matchesState?.nonExists?.includes(value): return 'gray';
+      case matchesState?.exists?.includes(value): return 'orange';
+      case matchesState?.existsInTheSamePosition?.includes(value): return 'green';
+      default: return 'white'
+    }
+  }
 
   return (
     <SafeAreaView style={backgroundStyle}>
@@ -135,11 +163,26 @@ function App(): React.JSX.Element {
           gap: 20,
         width: '100%',
       }}>
-        {
-          rows.map(({id,Component} )=> (
-            <Component key={id} rowState={rowState} matchesState={matchesState} />
-          ))
-        }
+        {/*{*/}
+        {/*  rows.map(({id,Component} )=> (*/}
+        {/*    <Component key={id} rowState={rowState} matchesState={matchesState} />*/}
+        {/*  ))*/}
+        {/*}*/}
+        {rows.map((row, rowIndex) => {
+          console.log('row',row);
+
+          return (
+            <View key={rowIndex} style={{flexDirection: 'row'}}>
+              {row.map((col, columnIndex) => (
+                <RowInput
+                  key={columnIndex}
+                  value={col}
+                  color={onBoxBgColor(col)}
+                />
+              ))}
+            </View>
+          )
+        })}
       </View>
 
       <View style={{flexDirection: 'row',justifyContent: 'center', marginTop: 100}}>
