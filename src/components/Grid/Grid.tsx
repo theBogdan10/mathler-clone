@@ -26,7 +26,7 @@ const Grid = ({rows, colors}: IGrid) => {
 };
 
 const GridWrapper = styled.View`
-  gap: 5px;
+  gap: 7px;
   width: 100%;
 `;
 
@@ -34,7 +34,7 @@ const RowWrapper = styled.View`
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 7px;
 `;
 
 export default Grid;

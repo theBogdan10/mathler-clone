@@ -9,7 +9,7 @@ interface IButton {
 
 const CustomButton = ({title, color, onPress}: IButton): JSX.Element => {
   return (
-    <ButtonWrapper activeOpacity={0.8} color={color} onPress={onPress}>
+    <ButtonWrapper activeOpacity={0.6} color={color} onPress={onPress}>
       <TextWrapper>{title}</TextWrapper>
     </ButtonWrapper>
   );
@@ -21,11 +21,12 @@ const ButtonWrapper = styled.TouchableOpacity<{
   color: string;
 }>`
   background-color: ${({color}) => color};
-  padding: 15px;
+  padding: 20px;
   border-radius: 5px;
 `;
 
 const TextWrapper = styled.Text`
   font-weight: bold;
+  font-size: 14px;
   color: black;
 `;

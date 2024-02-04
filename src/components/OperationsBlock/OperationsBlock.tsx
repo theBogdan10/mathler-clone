@@ -31,19 +31,19 @@ const OperationsBlock = ({
         ))}
       </FirstRowWrapper>
       <SecondRowWrapper>
-        <CustomButton
-          title={'Enter'}
-          color={onButtonColor('Enter')}
-          onPress={() => onPressAction('Enter')}
-        />
         {OPERATIONS_SECOND_ROW.map((el, index) => (
           <CustomButton
             key={index}
             title={el}
             color={onButtonColor(el)}
-            onPress={() => onPressAction(el)}
+            onPress={() => onPressValue(el)}
           />
         ))}
+        <CustomButton
+          title={'Enter'}
+          color={onButtonColor('Enter')}
+          onPress={() => onPressAction('Enter')}
+        />
         <CustomButton
           title={'Delete'}
           color={onButtonColor('Delete')}
@@ -57,19 +57,21 @@ const OperationsBlock = ({
 export default OperationsBlock;
 
 const OperationsBlockWrapper = styled.View`
-  gap: 5px;
+  gap: 8px;
 `;
 
 const FirstRowWrapper = styled.View`
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
+  flex-wrap: wrap;
 `;
 
 const SecondRowWrapper = styled.View`
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
+  flex-wrap: wrap;
 `;
