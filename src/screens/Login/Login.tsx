@@ -14,7 +14,15 @@ import CustomButton from '../../components/CustomButton/CustomButton';
 import {COLORS} from '../../util/colors';
 
 const Login = (): JSX.Element => {
-  const {email, setEmail, setPassword, password, isSubmitDisabled} = useLogin();
+  const {
+    email,
+    setEmail,
+    setPassword,
+    password,
+    isSubmitDisabled,
+    onSubmit,
+    isLoading,
+  } = useLogin();
 
   return (
     <KeyboardAvoidingView
@@ -41,9 +49,9 @@ const Login = (): JSX.Element => {
                 onChange={text => setPassword(text)}
               />
               <CustomButton
-                title={'Login'}
+                title={isLoading ? 'Loading...' : 'Login'}
                 color={isSubmitDisabled ? COLORS.LIGHT_GREY : COLORS.DARK_GREY}
-                onPress={() => {}}
+                onPress={onSubmit}
                 isDisabled={isSubmitDisabled}
               />
             </LoginWrapper>
