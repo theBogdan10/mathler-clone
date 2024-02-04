@@ -13,6 +13,7 @@ export interface IUseMathlerResult {
   onPressValue(value: string): void;
   rows: (string | null)[][];
   colors: (string | null)[][];
+  currentEquationResult: number;
 }
 
 const useMathler = (): IUseMathlerResult => {
@@ -22,7 +23,17 @@ const useMathler = (): IUseMathlerResult => {
   const [rows, setRows] = useState(initialRows);
   const [colors, setColors] = useState(initialColors);
 
-  const equation = mockedEquantations['1'];
+  const [equation, setEquation] = useState(mockedEquantations['4']);
+
+  const currentEquationResult = evaluate(equation);
+
+  const resetAllState = (value: number) => {
+    setCurrentRowIndex(0);
+    setCurrentColumnIndex(0);
+    setRows(initialRows);
+    setColors(initialColors);
+    setEquation(mockedEquantations[`${value}`]);
+  };
 
   const onSubmitRow = () => {
     const row = rows[currentRowIndex].filter(el => el !== null);
@@ -48,7 +59,7 @@ const useMathler = (): IUseMathlerResult => {
           ? COLORS.GREEN
           : equation.includes(el)
           ? COLORS.ORANGE
-          : COLORS.LIGHT_GREY;
+          : COLORS.DARK_GREY;
     });
 
     setColors(newColors);
@@ -56,16 +67,18 @@ const useMathler = (): IUseMathlerResult => {
     if (newColors[currentRowIndex].every(el => el === COLORS.GREEN)) {
       Alert.alert('Success', 'You win!');
       setTimeout(() => {
-        setCurrentRowIndex(0);
-        setCurrentColumnIndex(0);
-        setRows(initialRows);
-        setColors(initialColors);
-      }, 1000);
+        resetAllState(Math.floor(Math.random() * 10) + 1);
+      }, 500);
       return;
     } else {
       if (currentRowIndex < 5) {
         setCurrentRowIndex(prevState => prevState + 1);
         setCurrentColumnIndex(0);
+      } else {
+        Alert.alert('Failed', 'Unfortunately...You lose. Try again :)');
+        setTimeout(() => {
+          resetAllState(Math.floor(Math.random() * 10) + 1);
+        }, 500);
       }
     }
   };
@@ -131,7 +144,14 @@ const useMathler = (): IUseMathlerResult => {
     return obj[value] ?? COLORS.LIGHT_GREY;
   };
 
-  return {onButtonColor, onPressAction, onPressValue, rows, colors};
+  return {
+    onButtonColor,
+    onPressAction,
+    onPressValue,
+    rows,
+    colors,
+    currentEquationResult,
+  };
 };
 
 export default useMathler;
