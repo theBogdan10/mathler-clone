@@ -1,4 +1,4 @@
-import {useContext, useState} from 'react';
+import {useContext, useMemo, useState} from 'react';
 import {EMAIL_REGEX} from '../util/constants';
 import {setAccessToken} from '../util/asyncStorage';
 import tokens from '../util/mock/tokens.json';
@@ -21,8 +21,17 @@ const useLogin = (): IUseLogin => {
 
   const {setIsLogged} = useContext(AuthContext);
 
-  const isSubmitDisabled =
-    !email?.length || !password.length || !EMAIL_REGEX.test(email);
+  const isSubmitDisabled = useMemo(() => {
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+
+    return (
+      !trimmedEmail?.length ||
+      !trimmedPassword.length ||
+      !EMAIL_REGEX.test(trimmedEmail) ||
+      !(trimmedPassword.length > 5)
+    );
+  }, [email, password]);
 
   const onSubmit = async () => {
     setIsLoading(true);
